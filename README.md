@@ -14,6 +14,7 @@ Using the ESP-IDF SDK provided by Espressif is the most direct way to leverage t
 
 ## Status
 
+* 2025-10-10 upgrade ESP_IDF 5.4.2 to 5.5.1. And tweak some things to build.
 * 2025-07-21 Tweak MQTTT to
     * not close the connection
     * not subscribe (?)
