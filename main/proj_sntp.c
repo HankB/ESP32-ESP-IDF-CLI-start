@@ -51,9 +51,11 @@ time_t init_sntp(void)
     esp_netif_sntp_start();
     */
 
-    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(2,
-                                                                      ESP_SNTP_SERVER_LIST("time.windows.com", "pool.ntp.org"));
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(
+        2,
+        ESP_SNTP_SERVER_LIST("pool.ntp.org", "time.windows.com"));
     esp_netif_sntp_init(&config);
+
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
     /*    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
 
