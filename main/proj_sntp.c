@@ -4,10 +4,6 @@
  * Further documentation at
  * https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_netif_programming.html#esp-netif-sntp-api
  *
- * This example will configure SNTP to get the server from the DHCP assignment:https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_netif_programming.html#use-dhcp-obtained-sntp-server-s
- * Or it will not. The 'sntp' example code compiles fine with NTP server from DHCP but this file finds
- * esp_netif_sntp_start() to not be included in the headers and I cannot figure out how to fix that so I'm switching
- * to statically defined NTP server.
  */
 
 #include <time.h>
@@ -35,6 +31,31 @@ void time_sync_notification_cb(struct timeval *tv)
     ESP_LOGI(TAG, "Notification of a time synchronization event");
 }
 
+#ifndef INET6_ADDRSTRLEN
+#define INET6_ADDRSTRLEN 48
+#endif
+
+static void print_servers(void)
+{
+    ESP_LOGI(TAG, "List of configured NTP servers:");
+
+    for (uint8_t i = 0; i < SNTP_MAX_SERVERS; ++i)
+    {
+        if (esp_sntp_getservername(i))
+        {
+            ESP_LOGI(TAG, "server %d: %s", i, esp_sntp_getservername(i));
+        }
+        else
+        {
+            // we have either IPv4 or IPv6 address, let's print it
+            char buff[INET6_ADDRSTRLEN];
+            ip_addr_t const *ip = esp_sntp_getserver(i);
+            if (ipaddr_ntoa_r(ip, buff, INET6_ADDRSTRLEN) != NULL)
+                ESP_LOGI(TAG, "server %d: %s", i, buff);
+        }
+    }
+}
+
 time_t init_sntp(void)
 {
     time_t now;
@@ -43,33 +64,27 @@ time_t init_sntp(void)
     localtime_r(&now, &timeinfo);
     ESP_LOGI(TAG, "Initializing SNTP");
 
-    /*
-    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(0, {});
-    config.start = false;            // start the SNTP service explicitly
-    config.server_from_dhcp = false; // accept the NTP offer from the DHCP server
-    esp_netif_sntp_init(&config);
-    esp_netif_sntp_start();
-    */
-
+#if LWIP_DHCP_GET_NTP_SRV
+    esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG(CONFIG_SNTP_TIME_SERVER);
+    config.start = false;           // start the SNTP service explicitly
+    config.server_from_dhcp = true; // accept the NTP offer from the DHCP server
+    config.renew_servers_after_new_IP = true;   // let esp-netif update configured SNTP server(s) after receiving DHCP lease
+    config.index_of_first_server = 1;           // updates from server num 1, leaving server 0 (from DHCP) intact
+#else
     esp_sntp_config_t config = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(
         2,
         ESP_SNTP_SERVER_LIST("pool.ntp.org", "time.windows.com"));
-    esp_netif_sntp_init(&config);
+#endif
 
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
-    /*    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_netif_sntp_init(&config);
+    print_servers();
+    esp_netif_sntp_start();
 
-        //esp_sntp_setservername(0, "2.us.pool.ntp.org");
-        esp_sntp_init();
-    */
     // Is time set? If not, tm_year will be (1970 - 1900).
     if (timeinfo.tm_year < (2016 - 1900))
     {
         ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
-        /*
-        sntp_servermode_dhcp(true); // accept NTP offers from DHCP server, if any
-        initialize_sntp();
-        */
 
         // wait for time to be set
         time_t now = 0;
