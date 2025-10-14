@@ -30,9 +30,6 @@
 
 static const char *TAG = "sntp";
 
-static void obtain_time(void);
-static void initialize_sntp(void);
-
 void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG, "Notification of a time synchronization event");
@@ -44,41 +41,6 @@ time_t init_sntp(void)
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    initialize_sntp();
-    // Is time set? If not, tm_year will be (1970 - 1900).
-    if (timeinfo.tm_year < (2016 - 1900))
-    {
-        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
-        obtain_time();
-        // update 'now' variable with current time
-        time(&now);
-    }
-    return now;
-}
-
-static void obtain_time(void)
-{
-    /*
-    sntp_servermode_dhcp(true); // accept NTP offers from DHCP server, if any
-    initialize_sntp();
-    */
-
-    // wait for time to be set
-    time_t now = 0;
-    struct tm timeinfo = {0};
-    int retry = 0;
-    const int retry_count = 15;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
-    {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
-    time(&now);
-    localtime_r(&now, &timeinfo);
-}
-
-static void initialize_sntp(void)
-{
     ESP_LOGI(TAG, "Initializing SNTP");
 
     /*
@@ -98,4 +60,29 @@ static void initialize_sntp(void)
         //esp_sntp_setservername(0, "2.us.pool.ntp.org");
         esp_sntp_init();
     */
+    // Is time set? If not, tm_year will be (1970 - 1900).
+    if (timeinfo.tm_year < (2016 - 1900))
+    {
+        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+        /*
+        sntp_servermode_dhcp(true); // accept NTP offers from DHCP server, if any
+        initialize_sntp();
+        */
+
+        // wait for time to be set
+        time_t now = 0;
+        struct tm timeinfo = {0};
+        int retry = 0;
+        const int retry_count = 15;
+        while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+        {
+            ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+            vTaskDelay(2000 / portTICK_PERIOD_MS);
+        }
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        // update 'now' variable with current time
+        time(&now);
+    }
+    return now;
 }
