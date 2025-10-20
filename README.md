@@ -32,6 +32,21 @@ Using the ESP-IDF SDK provided by Espressif is the most direct way to leverage t
 * Implement multiple MQTT brokers (e.g. if one does not work, try another.)
 * Massive code cleanup
 
+## 2025-09-29 Revisit setup
+
+Recently upgraded this dev host from Debian Bookworm to Trixie and the first step produces:
+
+```text
+hbarta@olive:~/Programming/ESP32/ESP32-ESP-IDF-CLI-start$ . ~/esp/esp-idf/export.sh
+Checking "python3" ...
+Python 3.13.5
+"python3" has been detected
+
+ERROR: ESP-IDF Python virtual environment "/home/hbarta/.espressif/python_env/idf5.4_py3.13_env/bin/python" not found. Please run the install script to set it up before proceeding.
+hbarta@olive:~/Programming/ESP32/ESP32-ESP-IDF-CLI-start$ 
+```
+
+
 ## 2025-05-05 Setup
 
 * <https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html> Instructions for installing the tool chain and SDK. (I'm installing on Linux - Debian Bookworm.) With everything installed, I start the terminal session and copy the `blink` project files to this directory by:
