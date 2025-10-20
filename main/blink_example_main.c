@@ -65,8 +65,9 @@ void app_main(void)
         ESP_LOGI(TAG, "Turning the LED %s at %lld!", s_led_state == true ? "ON" : "OFF", time(0));
         heap_caps_get_info(&heap_info, MALLOC_CAP_8BIT);
         esp_wifi_sta_get_ap_info(&ap_info);
-        int len=snprintf(payload_buf, payload_len, "heap total:%u, used:%u, rssi:%d",
-            heap_info.total_free_bytes, heap_info.total_allocated_bytes,
+        time_t timestamp = time(0);
+        int len=snprintf(payload_buf, payload_len, "ts %llu: heap total:%u, used:%u, rssi:%d",
+            timestamp, heap_info.total_free_bytes, heap_info.total_allocated_bytes,
             ap_info.rssi);
 
         proj_mqtt_publish("/topic/repeating/C3", payload_buf, len, 0, 0);
