@@ -16,6 +16,7 @@ Using the ESP-IDF SDK provided by Espressif is the most direct way to leverage t
 
 See [Setup](./setup.md) for the shaggy dog story on setup and progress.
 
+* 2025-10-21 MQTT cleanup complete for now.
 * 2025-10-10 upgrade ESP_IDF 5.4.2 to 5.5.1. And tweak some things to build.
 * 2025-07-21 Tweak MQTT to
     * not close the connection
