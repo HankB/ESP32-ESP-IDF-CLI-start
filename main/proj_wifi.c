@@ -14,6 +14,7 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "nvs_flash.h"
 
 #include "lwip/err.h"
@@ -107,12 +108,33 @@ void wifi_init_sta(void)
 
     ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
 
+    // Variable to store the MAC address
+    uint8_t baseMac[6];
+    
+    // Get MAC address of the WiFi station interface
+    esp_read_mac(baseMac, ESP_MAC_WIFI_STA);
+    printf("Station MAC: ");
+    for (int i = 0; i < 5; i++) {
+        printf("%02X:", baseMac[i]);
+    }
+    printf("%02X\n", baseMac[5]);
+
+    // hostname in the formt "ESP32nnnnnn" where nnnnnn is the last three octets in the MAC address
+    // strlen(ESP32nnnnnn) > 11 so let's allow 16 bytes of storage
+    #define max_hostname_len 16
+    char    my_hostname[max_hostname_len];
+    snprintf(my_hostname, max_hostname_len, "ESP32-%02X%02X%02X", baseMac[3], baseMac[4], baseMac[5]);
+    printf("%s\n", my_hostname);
+
     s_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_netif_init());
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *p_netif = esp_netif_create_default_wifi_sta();
+
+    // Set the hostname for the network interface
+    esp_netif_set_hostname(p_netif, my_hostname);
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -170,10 +192,3 @@ void wifi_init_sta(void)
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 }
-
-/*
-void app_main(void)
-{
-    wifi_init_sta();
-}
-*/
