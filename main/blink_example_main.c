@@ -61,7 +61,7 @@ void app_main(void)
     wifi_ap_record_t    ap_info;
     char payload_buf[payload_len];
     time_t previous_publish=0;
-#define publish_interval 60
+#define publish_interval 600
 
     while (1) {
         ESP_LOGI(TAG, "Turning the LED %s", s_led_state == true ? "ON" : "OFF");
@@ -73,7 +73,7 @@ void app_main(void)
             int len=snprintf(payload_buf, payload_len, "ts %llu: heap total:%u, used:%u, rssi:%d",
                 timestamp, heap_info.total_free_bytes, heap_info.total_allocated_bytes,
                 ap_info.rssi);
-            proj_mqtt_publish("/topic/repeating/C3", payload_buf, len, 0, 0);
+            proj_mqtt_publish(get_hostname(), payload_buf, len, 0, 0);
             previous_publish = timestamp;
         }
         blink_led();

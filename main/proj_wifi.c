@@ -96,6 +96,13 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
+#define max_hostname_len 16
+static char    my_hostname[max_hostname_len];
+
+const char* get_hostname(void)
+{
+    return my_hostname;
+}
 void wifi_init_sta(void)
 {
     //Initialize NVS
@@ -121,8 +128,6 @@ void wifi_init_sta(void)
 
     // hostname in the formt "ESP32nnnnnn" where nnnnnn is the last three octets in the MAC address
     // strlen(ESP32nnnnnn) > 11 so let's allow 16 bytes of storage
-    #define max_hostname_len 16
-    char    my_hostname[max_hostname_len];
     snprintf(my_hostname, max_hostname_len, "ESP32-%02X%02X%02X", baseMac[3], baseMac[4], baseMac[5]);
     printf("%s\n", my_hostname);
 
