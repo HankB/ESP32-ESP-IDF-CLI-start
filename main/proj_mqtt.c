@@ -31,7 +31,7 @@
 #include "nvs_flash.h"
 #include "esp_event.h"
 #include "esp_netif.h"
-//#include "protocol_examples_common.h"
+#include "esp_random.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "secrets.h"
@@ -121,6 +121,11 @@ static void mqtt5_event_handler(void *handler_args, esp_event_base_t base, int32
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
         print_user_property(event->property->user_property);
+        uint32_t retry_delay = (esp_random()%10+5);
+        ESP_LOGI(TAG, "mqtt5_event_handler() delaying %lu s", retry_delay);        
+        vTaskDelay(retry_delay*1000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "esp_mqtt_client_reconnect(), returned %d", esp_mqtt_client_reconnect(client));        
+
         break;
     case MQTT_EVENT_SUBSCRIBED:
         ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
