@@ -133,4 +133,65 @@ topic/repeating/C3 ts 1773262724: heap total:219420, used:75512, rssi:-57
 
 ## 2026-03-12 overnight and no hiccup
 
-Moving the test setup to a location further from the AP. RSSI now -72 from -52. Perhaps that will provoke some comm issues. Perhaps bounbcing or pausing the broker would also work.
+Moving the test setup to a location further from the AP. RSSI now -72 from -52. Perhaps that will provoke some comm issues. Perhaps bouncing or pausing the broker would also work. It did. Stopping the broker and restarting it from the command line resulted in a rapid flood of error messages from the console. When the broker was restarted, communication was established. That worked.
+
+It is desirable to add some kind of delay to the retries to avoid flooding WiFi if the broker goes down and until it comes back. Since there may be multiple ESPs trying to reconnect, a variable delay also makes sense. For now, specify a delay between 5 and 15 seconds. This can be implemented in the callback. First several times time testing the result looked like
+
+```text
+I (56614) mqtt: sent publish successful, msg_id=0
+E (57434) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read(): EOF
+E (57434) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read() error: errno=128
+I (57434) mqtt: MQTT_EVENT_ERROR
+I (57444) mqtt: MQTT5 return code is 0
+E (57444) mqtt: Last error reported from esp-tls: 0x8008
+I (57454) mqtt: Last errno string (Success)
+I (57454) mqtt: Last errno string (Success)
+E (57464) mqtt_client: mqtt_process_receive: mqtt_message_receive() returned -2
+I (57474) mqtt: MQTT_EVENT_DISCONNECTED
+I (70474) mqtt: mqtt5_event_handler() delaying 13 s
+I (70474) mqtt: esp_mqtt_client_reconnect(), returned 0
+I (70474) mqtt: MQTT_EVENT_BEFORE_CONNECT
+I (70514) mqtt: MQTT_EVENT_CONNECTED
+I (70514) mqtt: sent publish successful, msg_id=0
+I (71514) mqtt: sent publish successful, msg_id=0
+```
+
+For further testing I was getting ready to kick off:
+
+```text
+root@olive:~# while(:)
+> do
+> systemctl stop mosquitto;systemctl start mosquitto
+> sleep 30
+> done
+```
+
+Before I hit Return, there was a hickup that matched the problem issue. Of note, the first retry was not successful but the second one was. This seems good.
+
+```text
+I (59474) mqtt: sent publish successful, msg_id=0
+W (70484) transport_base: Poll timeout or error, errno=Success, fd=54, timeout_ms=10000
+E (70484) mqtt_client: Writing didn't complete in specified timeout: errno=0
+I (70484) mqtt: MQTT_EVENT_DISCONNECTED
+I (70494) mqtt: mqtt5_event_handler() delaying 7 s
+I (77494) mqtt: esp_mqtt_client_reconnect(), returned 0
+W (77494) mqtt_client: Publish: Losing qos0 data when client not connected
+I (77494) mqtt: MQTT_EVENT_BEFORE_CONNECT
+I (77504) mqtt: sent publish successful, msg_id=-1
+E (87664) mqtt_client: esp_mqtt_connect: mqtt_message_receive() returned 0
+E (87664) mqtt_client: MQTT connect failed
+I (87664) mqtt: MQTT_EVENT_DISCONNECTED
+I (87664) mqtt: mqtt5_event_handler() delaying 7 s
+I (94674) mqtt: esp_mqtt_client_reconnect(), returned 0
+I (94674) mqtt: MQTT_EVENT_BEFORE_CONNECT
+I (95064) mqtt: MQTT_EVENT_CONNECTED
+I (95064) mqtt: sent publish successful, msg_id=0
+```
+
+### Interruption test
+
+The shell script above will be run to interrupt the 1/s message stream to determine if it reliably recovers. It ran for hours and recovered reliably (every time.)
+
+### long publish interval test
+
+Provide the capability to extend the interval between MQTT messages to see if a long idle interval results in a problem. Testing now with a 60s interval. Also fixed the missing "blink LED" (wrong GPIO.) I've added two more ESP32s for testing including a mini and ESP32-C3 mini. The ESP32-C3 is not getting time from an NTP source because I didn't configure that in `menuconfig`. That seems to get unset when running `idf.py set-target`
