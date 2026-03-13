@@ -195,3 +195,11 @@ The shell script above will be run to interrupt the 1/s message stream to determ
 ### long publish interval test
 
 Provide the capability to extend the interval between MQTT messages to see if a long idle interval results in a problem. Testing now with a 60s interval. Also fixed the missing "blink LED" (wrong GPIO.) I've added two more ESP32s for testing including a mini and ESP32-C3 mini. The ESP32-C3 is not getting time from an NTP source because I didn't configure that in `menuconfig`. That seems to get unset when running `idf.py set-target`
+
+## 2026-03-13 test longer intervals
+
+The 1 minute interval tests ran overnight with no disconnects. The interval is expanded to ten minutes and repeated. The first host to start began publishing messages before it had fetched time using NTP. And with three ESPs under test, it will be useful to include some ID with the published messages.
+
+Code just modified to use the hostname alone for the topic and delay 10 minutes between MQTT messages and testing with three ESP32s continues.
+
+At this point (and while testing continues) the performance seens good. Opening/closing the broker connection for each message has not yet been implemented. At this point I will begin to roll this out for applications derived from this template (and learn if Github does anything to facilitate this or if I just need to manually copy files.)
