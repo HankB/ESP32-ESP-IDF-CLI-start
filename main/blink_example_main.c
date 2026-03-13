@@ -60,17 +60,22 @@ void app_main(void)
     multi_heap_info_t   heap_info;
     wifi_ap_record_t    ap_info;
     char payload_buf[payload_len];
+    time_t previous_publish=0;
+#define publish_interval 60
 
     while (1) {
-        ESP_LOGI(TAG, "Turning the LED %s at %lld!", s_led_state == true ? "ON" : "OFF", time(0));
-        heap_caps_get_info(&heap_info, MALLOC_CAP_8BIT);
-        esp_wifi_sta_get_ap_info(&ap_info);
+        ESP_LOGI(TAG, "Turning the LED %s", s_led_state == true ? "ON" : "OFF");
         time_t timestamp = time(0);
-        int len=snprintf(payload_buf, payload_len, "ts %llu: heap total:%u, used:%u, rssi:%d",
-            timestamp, heap_info.total_free_bytes, heap_info.total_allocated_bytes,
-            ap_info.rssi);
-
-        proj_mqtt_publish("/topic/repeating/C3", payload_buf, len, 0, 0);
+        if(timestamp >= previous_publish+publish_interval)
+        {
+            heap_caps_get_info(&heap_info, MALLOC_CAP_8BIT);
+            esp_wifi_sta_get_ap_info(&ap_info);
+            int len=snprintf(payload_buf, payload_len, "ts %llu: heap total:%u, used:%u, rssi:%d",
+                timestamp, heap_info.total_free_bytes, heap_info.total_allocated_bytes,
+                ap_info.rssi);
+            proj_mqtt_publish("/topic/repeating/C3", payload_buf, len, 0, 0);
+            previous_publish = timestamp;
+        }
         blink_led();
         /* Toggle the LED state */
         s_led_state = !s_led_state;
