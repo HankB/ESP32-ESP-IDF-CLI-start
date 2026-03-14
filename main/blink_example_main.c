@@ -61,7 +61,7 @@ void app_main(void)
     wifi_ap_record_t    ap_info;
     char payload_buf[payload_len];
     time_t previous_publish=0;
-#define publish_interval 600
+#define publish_interval 30
 
     while (1) {
         ESP_LOGI(TAG, "Turning the LED %s", s_led_state == true ? "ON" : "OFF");

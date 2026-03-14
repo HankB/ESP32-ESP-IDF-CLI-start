@@ -23,6 +23,7 @@
   * ignored. The broker list will be included in `secrets.h`
   */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -45,6 +46,8 @@ static const char *TAG = "mqtt";
 static const char* brokers[] = { broker_list };
 //hoist "client" out of mqtt5_app_start() to use in proj_mqtt_publish
 static esp_mqtt_client_handle_t client;
+
+static bool is_disconnected=false;
 
 static void log_error_if_nonzero(const char *message, int error_code)
 {
@@ -121,10 +124,12 @@ static void mqtt5_event_handler(void *handler_args, esp_event_base_t base, int32
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
         print_user_property(event->property->user_property);
-        uint32_t retry_delay = (esp_random()%10+5);
-        ESP_LOGI(TAG, "mqtt5_event_handler() delaying %lu s", retry_delay);        
-        vTaskDelay(retry_delay*1000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "esp_mqtt_client_reconnect(), returned %d", esp_mqtt_client_reconnect(client));        
+        if(!is_disconnected) {
+            uint32_t retry_delay = (esp_random()%10+5);
+            ESP_LOGI(TAG, "mqtt5_event_handler() delaying %lu s", retry_delay);        
+            vTaskDelay(retry_delay*1000 / portTICK_PERIOD_MS);
+            ESP_LOGI(TAG, "esp_mqtt_client_reconnect(), returned %d", esp_mqtt_client_reconnect(client));        
+        }
 
         break;
     case MQTT_EVENT_SUBSCRIBED:
@@ -251,8 +256,14 @@ void init_mqtt(void)
 
 int proj_mqtt_publish(const char* topic, const char* payload, int len, int qos, int retain)
 {
-    esp_log_level_set(TAG, ESP_LOG_INFO); 
+    esp_log_level_set(TAG, ESP_LOG_INFO);
+    esp_err_t rc = esp_mqtt_client_reconnect(client);
+    is_disconnected = false;
+    ESP_LOGI(TAG, "esp_mqtt_client_reconnect, rc=%d", rc);
     int msg_id = esp_mqtt_client_publish(client, topic, payload, len, 0, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+    rc = esp_mqtt_client_disconnect(client);
+    is_disconnected = true;
+    ESP_LOGI(TAG, "esp_mqtt_client_disconnect, rc=%d", rc);
     return msg_id;
 }
