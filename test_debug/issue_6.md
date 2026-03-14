@@ -244,4 +244,8 @@ It seems clear that the open->publish->close strategy must be implemented when t
 
 ## 2026-03-14 happy Pi day - back to work
 
-Three ESPs were left running with the long publish interval overnight. In trhe morning only two were still publishing with `ESP32_998610` AWOL. Resetting them one at a time to match the host name to device and identified the ESP32-C3 as the one that stopped publishing.
+Three ESPs were left running with the long publish interval overnight. In the morning only two were still publishing with `ESP32_998610` AWOL. Resetting them one at a time to match the host name to device and identified the ESP32-C3 as the one that stopped publishing.
+
+Testing ESP32 vs. ESP32-C3 git different results. This was being done with an older version of the library. Upgrading to 5.5 (albeit with some warnings for submodules) seems to have resolved. And as a bonus, everything works! I intend to perform some long term tests using both short (60s) intervals as well as longer (15m) intervals but this looks like it might be complete.
+
+Except the option to leave the connection open. Logic for that is starting to look a little involved so I'm setting it aside. If someone needs that, they can either delete the logic that closes and reopens the connection or they can implement the required logic.
