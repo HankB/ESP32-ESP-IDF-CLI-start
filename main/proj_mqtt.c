@@ -260,7 +260,7 @@ int proj_mqtt_publish(const char* topic, const char* payload, int len, int qos, 
     esp_err_t rc = esp_mqtt_client_reconnect(client);
     is_disconnected = false;
     ESP_LOGI(TAG, "esp_mqtt_client_reconnect, rc=%d", rc);
-    int msg_id = esp_mqtt_client_publish(client, topic, payload, len, 0, 0);
+    int msg_id = esp_mqtt_client_publish(client, topic, payload, len, qos, retain);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
     rc = esp_mqtt_client_disconnect(client);
     is_disconnected = true;
