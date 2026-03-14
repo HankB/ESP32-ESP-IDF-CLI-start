@@ -203,3 +203,45 @@ The 1 minute interval tests ran overnight with no disconnects. The interval is e
 Code just modified to use the hostname alone for the topic and delay 10 minutes between MQTT messages and testing with three ESP32s continues.
 
 At this point (and while testing continues) the performance seens good. Opening/closing the broker connection for each message has not yet been implemented. At this point I will begin to roll this out for applications derived from this template (and learn if Github does anything to facilitate this or if I just need to manually copy files.)
+
+### update on 10 minute intervals
+
+Seen in the broker logs:
+
+```text
+1773427710: Expiring client ESP32_998610 due to timeout.
+1773428175: New connection from 10.10.0.128:52802 on port 1883.
+1773428175: New client connected from 10.10.0.128:52802 as ESP32_998610 (p5, c1, k120, u'123').
+1773428356: Client ESP32_998610 closed its connection.
+1773428367: Expiring client ESP32_998610 due to timeout.
+1773428383: New connection from 10.10.0.128:52803 on port 1883.
+1773428383: New client connected from 10.10.0.128:52803 as ESP32_998610 (p5, c1, k120, u'123').
+1773428637: Client ESP32_998610 closed its connection.
+1773428648: Expiring client ESP32_998610 due to timeout.
+```
+
+And calculating the deltas
+
+|timestamp|delta|mm:ss|event|
+|---|---|---|---|
+|1773427710|||Expiring client ESP32_998610 due to timeout.|
+|1773428175|65|1:05|New connection from 10.10.0.128:52802 on port 1883.|
+|1773428175|0|0:00|New client connected from 10.10.0.128:52802 as ESP32_998610 (p5, c1, k120, u'123').|
+|1773428356|181|3:01|Client ESP32_998610 closed its connection.|
+|1773428367|11|0:11|Expiring client ESP32_998610 due to timeout.|
+|1773428383|16|0:16|New connection from 10.10.0.128:52803 on port 1883.|
+|1773428383|0|0:00|New client connected from 10.10.0.128:52803 as ESP32_998610 (p5, c1, k120, u'123').|
+|1773428637|254|4:14|Client ESP32_998610 closed its connection.|
+|1773428648|11|0:11|Expiring client ESP32_998610 due to timeout.|
+
+Can't say this makes any sense to me except:
+
+* The client is not coded to close the connection. I can't rule out that some resource exhaustion results in the stack closing the connection on behalf of the app.
+* The broker times out 11s following this notice.
+* The "new connection" repeats following a 208s delay which does not seem to match the publish interval 600s.
+
+It seems clear that the open->publish->close strategy must be implemented when the intervals between published messages is longer than some interval.
+
+## 2026-03-14 happy Pi day - back to work
+
+Three ESPs were left running with the long publish interval overnight. In trhe morning only two were still publishing with `ESP32_998610` AWOL. Resetting them one at a time to match the host name to device and identified the ESP32-C3 as the one that stopped publishing.
