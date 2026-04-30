@@ -16,6 +16,7 @@ Using the ESP-IDF SDK provided by Espressif is the most direct way to leverage t
 
 See [Setup](./setup.md) for the shaggy dog story on setup and progress.
 
+* 2026-03-14 issue #6 is undergoing testing and may be resolved.
 * 2026-03-11 Working with issue #6 identified in derived project.
 * 2025-10-21 MQTT cleanup complete for now.
 * 2025-10-10 upgrade ESP_IDF 5.4.2 to 5.5.1. And tweak some things to build.
@@ -35,9 +36,8 @@ See [Setup](./setup.md) for the shaggy dog story on setup and progress.
 
 See [Roadmap](./roadmap.md)
 
-* Migrate to ESP32-C3 (should still work with Tensilica based ESP32.)
+* Migrate to ESP-IDF 6.0. Current build is being tested with 5.5.
 * Implement multiple MQTT brokers (e.g. if one does not work, try another.)
-* Massive code cleanup
 
 ### Prep
 
