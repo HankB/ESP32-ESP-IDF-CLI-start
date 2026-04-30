@@ -16,6 +16,7 @@ Using the ESP-IDF SDK provided by Espressif is the most direct way to leverage t
 
 See [Setup](./setup.md) for the shaggy dog story on setup and progress.
 
+* 2026-04-30 latest changes (for issue #6) break MQTT. It publishes once on startup and never again.
 * 2026-03-14 issue #6 is undergoing testing and may be resolved.
 * 2026-03-11 Working with issue #6 identified in derived project.
 * 2025-10-21 MQTT cleanup complete for now.
